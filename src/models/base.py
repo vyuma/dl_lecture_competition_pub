@@ -46,8 +46,7 @@ class upsample_conv2d_and_predict_flow(nn.Module):
                                            ksize=1,
                                            strides=1,
                                            padding=0,
-                                           activation='tanh')
-
+                                           activation='leanky_relu')
     def forward(self, conv):
         shape = conv.shape
         conv = nn.functional.interpolate(conv,size=[shape[2]*2,shape[3]*2],mode='nearest')
@@ -89,5 +88,19 @@ def general_conv2d(in_channels,out_channels, ksize=3, strides=2, padding=1, do_b
                 nn.Conv2d(in_channels = in_channels,out_channels = out_channels,kernel_size = ksize,
                         stride=strides,padding=padding),
                 nn.Tanh()
+            )
+    elif activation == 'leanky_relu':
+        if do_batch_norm:
+            conv2d = nn.Sequential(
+                nn.Conv2d(in_channels = in_channels,out_channels = out_channels,kernel_size = ksize,
+                        stride=strides,padding=padding),
+                nn.LeakyReLU(),
+                nn.BatchNorm2d(out_channels,eps=1e-5,momentum=0.99)
+            )
+        else:
+            conv2d = nn.Sequential(
+                nn.Conv2d(in_channels = in_channels,out_channels = out_channels,kernel_size = ksize,
+                        stride=strides,padding=padding),
+                nn.LeakyReLU()
             )
     return conv2d
